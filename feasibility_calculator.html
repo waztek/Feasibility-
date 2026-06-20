@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Feasibility">
+<title>Development Feasibility</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f6f3;
+    --surface: #ffffff;
+    --border: #e4e2dc;
+    --border-strong: #c8c5bc;
+    --text: #1a1917;
+    --text-muted: #6b6860;
+    --text-faint: #9b9890;
+    --accent: #1a4a6b;
+    --accent-light: #e8f0f7;
+    --green: #1a5c3a;
+    --green-bg: #eaf4ee;
+    --red: #8b1a1a;
+    --red-bg: #faeaea;
+    --gold: #7a5c1e;
+    --gold-bg: #fdf5e6;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: 3rem;
+  }
+
+  header {
+    background: var(--accent);
+    color: white;
+    padding: 1.25rem 1rem 1rem;
+  }
+  header h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
+  header p { font-size: 13px; opacity: 0.7; margin-top: 2px; }
+
+  .container { padding: 0 1rem; }
+
+  /* Summary pinned at top */
+  .summary {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin: 1rem 0;
+    overflow: hidden;
+  }
+  .summary-hero {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .summary-hero .label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+  .summary-hero .big { font-size: 36px; font-weight: 700; letter-spacing: -1px; line-height: 1; }
+  .summary-hero .big.pos { color: var(--green); }
+  .summary-hero .big.neg { color: var(--red); }
+  .summary-hero .big.zero { color: var(--text-muted); }
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .stat {
+    padding: .85rem 1.25rem;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .stat:nth-child(even) { border-right: none; }
+  .stat:nth-last-child(-n+2) { border-bottom: none; }
+  .stat .s-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 3px; }
+  .stat .s-val { font-size: 17px; font-weight: 600; }
+  .stat.good .s-val { color: var(--green); }
+  .stat.bad .s-val { color: var(--red); }
+
+  /* Inputs */
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: .75rem;
+    overflow: hidden;
+  }
+  .section-header {
+    padding: .75rem 1.25rem;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    user-select: none;
+  }
+  .section-header .arrow { font-size: 16px; transition: transform .2s; }
+  .section-header.collapsed .arrow { transform: rotate(-90deg); }
+  .section-body { display: block; }
+  .section-body.hidden { display: none; }
+
+  .field {
+    padding: .75rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .field:last-child { border-bottom: none; }
+  .field-label { font-size: 14px; color: var(--text); flex: 1; }
+  .field-hint { font-size: 11px; color: var(--text-faint); margin-top: 1px; }
+  .field-input { flex-shrink: 0; }
+
+  .input-wrap { display: flex; align-items: center; gap: 4px; }
+  .input-prefix, .input-suffix {
+    font-size: 14px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  input[type=number] {
+    width: 110px;
+    text-align: right;
+    padding: 8px 10px;
+    font-size: 16px;
+    font-weight: 500;
+    border: 1.5px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: white;
+    color: var(--text);
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+  input[type=number]:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  input.wide { width: 140px; }
+
+  /* Toggle pills */
+  .pill-group { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pill {
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 20px;
+    background: white;
+    color: var(--text-muted);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .pill.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+
+  /* Breakdown table */
+  .breakdown-table { width: 100%; border-collapse: collapse; }
+  .breakdown-table td {
+    padding: .7rem 1.25rem;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .breakdown-table tr:last-child td { border-bottom: none; }
+  .breakdown-table td:last-child { text-align: right; font-weight: 500; white-space: nowrap; }
+  .breakdown-table .subtotal td { background: var(--bg); font-weight: 600; font-size: 14px; }
+  .breakdown-table .subtotal td:first-child { color: var(--text-muted); }
+
+  /* Scenario table */
+  .scenario-table { width: 100%; border-collapse: collapse; }
+  .scenario-table th {
+    padding: .6rem 1rem;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--text-muted);
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    text-align: right;
+  }
+  .scenario-table th:first-child { text-align: left; }
+  .scenario-table td {
+    padding: .65rem 1rem;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    text-align: right;
+  }
+  .scenario-table td:first-child { text-align: left; font-weight: 500; }
+  .scenario-table tr:last-child td { border-bottom: none; }
+  .scenario-table tr.match td { background: var(--accent-light); color: var(--accent); font-weight: 600; }
+
+  .note {
+    font-size: 12px;
+    color: var(--text-faint);
+    padding: .75rem 1.25rem;
+    border-top: 1px solid var(--border);
+    line-height: 1.5;
+  }
+
+  .field.pill-field {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .5rem;
+  }
+  .field.pill-field .field-input { width: 100%; }
+  .field.pill-field .pill-group { width: 100%; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Development Feasibility</h1>
+  <p>VIC · First-pass calculator</p>
+</header>
+
+<div class="container">
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="summary-hero">
+      <div class="label">Expected profit</div>
+      <div class="big" id="s-profit">—</div>
+    </div>
+    <div class="summary-grid">
+      <div class="stat"><div class="s-label">Total cost</div><div class="s-val" id="s-cost">—</div></div>
+      <div class="stat"><div class="s-label">Total revenue</div><div class="s-val" id="s-rev">—</div></div>
+      <div class="stat" id="s-margin-card"><div class="s-label">Margin on revenue</div><div class="s-val" id="s-margin">—</div></div>
+      <div class="stat" id="s-roc-card"><div class="s-label">Return on cost</div><div class="s-val" id="s-roc">—</div></div>
+    </div>
+  </div>
+
+  <!-- Project Inputs -->
+  <div class="section">
+    <div class="section-header" onclick="toggleSection(this)">
+      <span>Project inputs</span><span class="arrow">›</span>
+    </div>
+    <div class="section-body">
+      <div class="field">
+        <div><div class="field-label">Dwellings</div></div>
+        <div class="field-input"><input type="number" id="dwellings" value="2" min="1"></div>
+      </div>
+      <div class="field">
+        <div><div class="field-label">Land size</div></div>
+        <div class="field-input"><div class="input-wrap"><input type="number" id="landSize" value="744"><span class="input-suffix">sqm</span></div></div>
+      </div>
+      <div class="field">
+        <div><div class="field-label">Land / purchase price</div></div>
+        <div class="field-input"><div class="input-wrap"><span class="input-prefix">$</span><input type="number" class="wide" id="landCost" value="850000"></div></div>
+      </div>
+      <div class="field">
+        <div><div class="field-label">Build size per dwelling</div></div>
+        <div class="field-input"><div class="input-wrap"><input type="number" id="buildSq" value="25"><span class="input-suffix">sq</span></div></div>
+      </div>
+      <div class="field">
+        <div><div class="field-label">Build cost per square</div></div>
+        <div class="field-input"><div class="input-wrap"><span class="input-prefix">$</span><input type="number" class="wide" id="buildCost" value="21000"></div></div>
+      </div>
+      <div class="field">
+        <div><div class="field-label">Plans &amp; permits</div><div class="field-hint">Architect, planning, engineering, reports</div></div>
+        <div class="field-input"><div class="input-wrap"><span class="input-prefix">$</span><input type="number" class="wide" id="permits" value="35000"></div></div>
+      </div>
+      <div class="field">
+        <div><div class="field-label">Additional costs</div><div class="field-hint">Land tax, council, insurance, legals, demo</div></div>
+        <div class="field-input"><div class="input-wrap"><span class="input-prefix">$</span><input type="number" class="wide" id="additional" value="15000"></div></div>
+      </div>
+      <div class="field pill-field">
+        <div class="field-label">Construction contingency</div>
+        <div class="field-input">
+          <div class="pill-group" id="conting-pills">
+            <button class="pill active" data-val="0.02">2%</button>
+            <button class="pill" data-val="0.05">5%</button>
+            <button class="pill" data-val="0.10">10%</button>
+            <button class="pill" data-val="custom">Custom</button>
+          </div>
+          <div id="conting-custom-wrap" style="display:none;margin-top:.5rem">
+            <div class="input-wrap"><input type="number" id="contingCustom" value="2" min="0" max="100"><span class="input-suffix">%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Revenue -->
+  <div class="section">
+    <div class="section-header" onclick="toggleSection(this)">
+      <span>Revenue</span><span class="arrow">›</span>
+    </div>
+    <div class="section-body">
+      <div class="field">
+        <div><div class="field-label">Sale price per dwelling</div></div>
+        <div class="field-input"><div class="input-wrap"><span class="input-prefix">$</span><input type="number" class="wide" id="salePrice" value="1200000"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Finance & Holding -->
+  <div class="section">
+    <div class="section-header" onclick="toggleSection(this)">
+      <span>Finance &amp; holding costs</span><span class="arrow">›</span>
+    </div>
+    <div class="section-body">
+      <div class="field">
+        <div><div class="field-label">Annual interest rate</div></div>
+        <div class="field-input"><div class="input-wrap"><input type="number" id="rate" value="7" step="0.1"><span class="input-suffix">%</span></div></div>
+      </div>
+      <div class="field">
+        <div><div class="field-label">Pre-build holding</div><div class="field-hint">Months from settlement to construction</div></div>
+        <div class="field-input"><div class="input-wrap"><input type="number" id="preBuild" value="3"><span class="input-suffix">mths</span></div></div>
+      </div>
+      <div class="field">
+        <div><div class="field-label">Construction period</div></div>
+        <div class="field-input"><div class="input-wrap"><input type="number" id="buildMonths" value="12"><span class="input-suffix">mths</span></div></div>
+      </div>
+      <div class="field pill-field">
+        <div>
+          <div class="field-label">Avg. construction drawdown</div>
+          <div class="field-hint">50% realistic · 60% conservative (default) · 100% worst-case</div>
+        </div>
+        <div class="field-input">
+          <div class="pill-group" id="drawdown-pills">
+            <button class="pill" data-val="0.50">50%</button>
+            <button class="pill active" data-val="0.60">60%</button>
+            <button class="pill" data-val="0.70">70%</button>
+            <button class="pill" data-val="1.00">100%</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cost Breakdown -->
+  <div class="section">
+    <div class="section-header collapsed" onclick="toggleSection(this)">
+      <span>Cost breakdown</span><span class="arrow">›</span>
+    </div>
+    <div class="section-body hidden">
+      <table class="breakdown-table" id="breakdown-table"></table>
+    </div>
+  </div>
+
+  <!-- Profit Scenarios -->
+  <div class="section">
+    <div class="section-header collapsed" onclick="toggleSection(this)">
+      <span>Profit scenarios</span><span class="arrow">›</span>
+    </div>
+    <div class="section-body hidden">
+      <table class="scenario-table" id="scenario-table"></table>
+      <div class="note">Break-even row highlights in blue. Confirm stamp duty, lending, and planning with your broker, accountant, and town planner.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let contingRate = 0.02;
+let drawdownRate = 0.60;
+
+function fmt(n) { return '$' + Math.round(n).toLocaleString('en-AU'); }
+function fmtPct(n) { return (n * 100).toFixed(1) + '%'; }
+
+function vicStampDuty(price) {
+  if (price <= 25000) return price * 0.014;
+  if (price <= 130000) return 350 + (price - 25000) * 0.024;
+  if (price <= 960000) return 2870 + (price - 130000) * 0.06;
+  if (price <= 2000000) return 55000 + (price - 960000) * 0.055;
+  return price * 0.065;
+}
+
+function val(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+function calc() {
+  const dwellings = Math.max(1, val('dwellings'));
+  const landCost = val('landCost');
+  const buildSq = val('buildSq');
+  const buildCost = val('buildCost');
+  const permits = val('permits');
+  const additional = val('additional');
+  const rate = val('rate') / 100;
+  const preBuild = val('preBuild');
+  const buildMonths = val('buildMonths');
+  const salePrice = val('salePrice');
+
+  const construction = dwellings * buildSq * buildCost;
+  const contingency = construction * contingRate;
+  const stampDuty = vicStampDuty(landCost);
+  const totalMonths = preBuild + buildMonths;
+  const landInterest = landCost * rate * totalMonths / 12;
+  const constInterest = construction * drawdownRate * rate * buildMonths / 12;
+  const holdingCosts = landInterest + constInterest;
+  const totalCost = landCost + stampDuty + construction + contingency + permits + additional + holdingCosts;
+  const totalRevenue = salePrice * dwellings;
+  const profit = totalRevenue - totalCost;
+  const margin = totalRevenue > 0 ? profit / totalRevenue : 0;
+  const roc = totalCost > 0 ? profit / totalCost : 0;
+
+  // Summary
+  const profitEl = document.getElementById('s-profit');
+  profitEl.textContent = fmt(profit);
+  profitEl.className = 'big ' + (profit > 0 ? 'pos' : profit < 0 ? 'neg' : 'zero');
+
+  document.getElementById('s-cost').textContent = fmt(totalCost);
+  document.getElementById('s-rev').textContent = fmt(totalRevenue);
+  document.getElementById('s-margin').textContent = fmtPct(margin);
+  document.getElementById('s-roc').textContent = fmtPct(roc);
+
+  const mCard = document.getElementById('s-margin-card');
+  const rCard = document.getElementById('s-roc-card');
+  mCard.className = 'stat ' + (margin > 0.15 ? 'good' : margin < 0 ? 'bad' : '');
+  rCard.className = 'stat ' + (roc > 0.15 ? 'good' : roc < 0 ? 'bad' : '');
+
+  // Breakdown
+  document.getElementById('breakdown-table').innerHTML = `
+    <tbody>
+      <tr><td>Land cost</td><td>${fmt(landCost)}</td></tr>
+      <tr><td>Stamp duty (VIC estimate)</td><td>${fmt(stampDuty)}</td></tr>
+      <tr><td>Construction (${dwellings}×${buildSq}sq @ $${Math.round(buildCost).toLocaleString('en-AU')})</td><td>${fmt(construction)}</td></tr>
+      <tr><td>Contingency (${fmtPct(contingRate)})</td><td>${fmt(contingency)}</td></tr>
+      <tr><td>Plans &amp; permits</td><td>${fmt(permits)}</td></tr>
+      <tr><td>Additional costs</td><td>${fmt(additional)}</td></tr>
+      <tr><td>Land holding interest (${totalMonths} mths)</td><td>${fmt(landInterest)}</td></tr>
+      <tr><td>Construction interest (${Math.round(drawdownRate*100)}% drawdown, ${buildMonths} mths)</td><td>${fmt(constInterest)}</td></tr>
+      <tr class="subtotal"><td>Total project cost</td><td>${fmt(totalCost)}</td></tr>
+      <tr class="subtotal"><td>Break-even per dwelling</td><td>${fmt(totalCost / dwellings)}</td></tr>
+    </tbody>`;
+
+  // Scenarios
+  const targets = [0, 100000, 200000, 300000, 400000, 500000];
+  const rows = targets.map(t => {
+    const reqRev = totalCost + t;
+    const reqPer = reqRev / dwellings;
+    const isMatch = Math.abs(profit - t) < 5000;
+    return `<tr${isMatch ? ' class="match"' : ''}>
+      <td>${fmt(t)}</td>
+      <td>${fmt(reqRev)}</td>
+      <td>${fmt(reqPer)}</td>
+    </tr>`;
+  });
+  document.getElementById('scenario-table').innerHTML = `
+    <thead><tr><th>Target profit</th><th>Revenue needed</th><th>Per dwelling</th></tr></thead>
+    <tbody>${rows.join('')}</tbody>`;
+}
+
+function toggleSection(header) {
+  header.classList.toggle('collapsed');
+  const body = header.nextElementSibling;
+  body.classList.toggle('hidden');
+}
+
+// Contingency pills
+document.querySelectorAll('#conting-pills .pill').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#conting-pills .pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const v = btn.dataset.val;
+    const customWrap = document.getElementById('conting-custom-wrap');
+    if (v === 'custom') {
+      customWrap.style.display = 'block';
+      contingRate = (parseFloat(document.getElementById('contingCustom').value) || 0) / 100;
+    } else {
+      customWrap.style.display = 'none';
+      contingRate = parseFloat(v);
+    }
+    calc();
+  });
+});
+document.getElementById('contingCustom').addEventListener('input', () => {
+  contingRate = (parseFloat(document.getElementById('contingCustom').value) || 0) / 100;
+  calc();
+});
+
+// Drawdown pills
+document.querySelectorAll('#drawdown-pills .pill').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#drawdown-pills .pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    drawdownRate = parseFloat(btn.dataset.val);
+    calc();
+  });
+});
+
+// Live recalc
+document.querySelectorAll('input[type=number]').forEach(el => el.addEventListener('input', calc));
+
+calc();
+</script>
+</body>
+</html>
